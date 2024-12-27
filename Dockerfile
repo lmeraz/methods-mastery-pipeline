@@ -16,4 +16,4 @@ VOLUME ["/data"]
 COPY . /app
 
 # Command to run the script
-CMD ["python", "etl.py"]
+CMD ["python", "app/etl.py"]

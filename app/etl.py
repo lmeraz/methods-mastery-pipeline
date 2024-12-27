@@ -1,8 +1,8 @@
 from datasets import load_dataset, Dataset
-from app.db import DatabaseHandler, DB_PATH, CACHE_PATH
-from app.insights import data_insights
+from db import DatabaseHandler, DB_PATH, CACHE_PATH
+from insights import data_insights
 import traceback
-from app.logging_config import configure_logging
+from logging_config import configure_logging
 
 # Configure logging
 logger = configure_logging()

@@ -3,6 +3,8 @@ services:
   etl:
     build: .
     container_name: social-media-insights
+    environment:
+      - DATA_PATH=/data
     volumes:
-      - ./data:./data
-    command: ["uv", "etl"]
+      - ${PWD}/data:/data
+    command: ["python", "app/etl.py"]

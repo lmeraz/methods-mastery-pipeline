@@ -1,10 +1,9 @@
 # Variables
-IMAGE_NAME := social-media-insights
+COMPOSE := docker-compose
+SERVICE := etl
 CONTAINER_NAME := social-media-insights-container
+IMAGE_NAME := social-media-insights
 DATA_VOLUME := $(shell pwd)/data:/data
-APP_VOLUME := $(shell pwd)/app:/app
-DOCKER_RUN_FLAGS := --rm --name $(CONTAINER_NAME) -v $(DATA_VOLUME) -v $(APP_VOLUME)
-PYTHON := python3
 
 # Default target
 .DEFAULT_GOAL := help
@@ -16,39 +15,32 @@ help: ## Display this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-20s %s\n", $$1, $$2}'
 
 # Build the Docker image
-.PHONY: build
-build: ## Build the Docker image
+build: ## Build the Docker image using Docker Compose
 	@echo "Building the Docker image..."
-	docker build -t $(IMAGE_NAME) .
+	$(COMPOSE) build
 
-# Run the Docker container
-.PHONY: run
-run: ## Run the application in the Docker container
-	@echo "Running the Docker container..."
-	docker run $(DOCKER_RUN_FLAGS) $(IMAGE_NAME)
+# Start the application
+.PHONY: up
+up: ## Start the application using Docker Compose
+	@echo "Starting the application..."
+	$(COMPOSE) up
 
-# Run the application in interactive mode
-.PHONY: interactive
-interactive: ## Run the container in interactive mode
-	@echo "Starting the Docker container in interactive mode..."
-	docker run -it $(DOCKER_RUN_FLAGS) $(IMAGE_NAME) bash
+# Stop the application
+.PHONY: down
+down: ## Stop the application and remove containers
+	@echo "Stopping the application..."
+	$(COMPOSE) down
 
 # Run tests
 .PHONY: test
-test: ## Run tests inside the Docker container
+test: ## Run tests inside the Docker Compose service
 	@echo "Running tests..."
-	docker run $(DOCKER_RUN_FLAGS) $(IMAGE_NAME) pytest
-
-# Stop and remove containers
-.PHONY: clean-containers
-clean-containers: ## Stop and remove the Docker container
-	@echo "Cleaning up containers..."
-	-docker stop $(CONTAINER_NAME) 2>/dev/null || true
-	-docker rm $(CONTAINER_NAME) 2>/dev/null || true
+	$(COMPOSE) run $(SERVICE) pytest
 
 # Clean up environment
 .PHONY: clean
-clean: clean-containers ## Clean up temporary files and environment
+clean: down ## Clean up temporary files and environment
+	@echo "Cleaning up environment..."
 	@rm -rf .venv
 	@find . -name "__pycache__" -type d -exec rm -rf {} +
 	@echo "Environment and cache cleaned up."
@@ -59,12 +51,21 @@ install: ## install requirements
 	@uv pip install -r requirements.txt
 	@uv sync
 
-# Rebuild the project
+
 .PHONY: rebuild
-rebuild: clean install ## Clean and reinstall the project
-	@echo "Rebuilt the project."
+rebuild: ## Rebuild the application
+	@echo "Rebuilding the application..."
+	$(COMPOSE) down
+	$(COMPOSE) build
+	$(COMPOSE) up
 
 # Run the application
 .PHONY: app-run
 app-run: ## Run the application using uv
-	@uv run python -m app.etl
+	@uv run app/etl.py
+
+# Run interactive shell
+.PHONY: shell
+shell: ## Open an interactive shell inside the container
+	@echo "Opening interactive shell..."
+	$(COMPOSE) exec $(SERVICE) /bin/sh
