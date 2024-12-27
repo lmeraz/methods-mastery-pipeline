@@ -15,18 +15,34 @@ This project extracts, transforms, and loads social media post data into a SQLit
 - Astral-sh/UV
 
 ## Usage
-
 1. Clone the repository:
    ```bash
    git clone <repository-url>
    cd social-media-insights
+   ```
 2. Install dependencies:
+   ```bash
    make install
-3. Run the ETL pipeline:
-   make app-run
-4. run the application in Docker:
+   ```
+3. Build Docker Image
+   ```
    make build
-5. Run on docker container
-   make run
-6. Run tests o docker container
-   make tests
+   ```
+
+## Run
+### Local
+`make app-run`
+### Docker
+`make run`
+
+## Test
+### Local
+`make test-local`
+### Docker
+`make test`
+
+## Utilities
+`make shell`
+`make rebuild`
+`make clean`
+`make docker-clean`

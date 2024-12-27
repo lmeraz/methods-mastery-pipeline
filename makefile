@@ -1,9 +1,6 @@
 # Variables
 COMPOSE := docker-compose
 SERVICE := etl
-CONTAINER_NAME := social-media-insights-container
-IMAGE_NAME := social-media-insights
-DATA_VOLUME := $(shell pwd)/data:/data
 
 # Default target
 .DEFAULT_GOAL := help
@@ -15,13 +12,14 @@ help: ## Display this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-20s %s\n", $$1, $$2}'
 
 # Build the Docker image
-build: ## Build the Docker image using Docker Compose
+.PHONY: build
+build: ## Build the Docker image
 	@echo "Building the Docker image..."
 	$(COMPOSE) build
 
 # Start the application
 .PHONY: up
-up: ## Start the application using Docker Compose
+up: ## Start the application
 	@echo "Starting the application..."
 	$(COMPOSE) up
 
@@ -31,41 +29,58 @@ down: ## Stop the application and remove containers
 	@echo "Stopping the application..."
 	$(COMPOSE) down
 
-# Run tests
-.PHONY: test
-test: ## Run tests inside the Docker Compose service
-	@echo "Running tests..."
-	$(COMPOSE) run $(SERVICE) pytest
-
-# Clean up environment
-.PHONY: clean
-clean: down ## Clean up temporary files and environment
-	@echo "Cleaning up environment..."
-	@rm -rf .venv
-	@find . -name "__pycache__" -type d -exec rm -rf {} +
-	@echo "Environment and cache cleaned up."
-
-# Initialize the uv project
-.PHONY: install
-install: ## install requirements
-	@uv pip install -r requirements.txt
-	@uv sync
-
-
+# Rebuild the application
 .PHONY: rebuild
-rebuild: ## Rebuild the application
+rebuild: ## Rebuild and restart the application
 	@echo "Rebuilding the application..."
 	$(COMPOSE) down
 	$(COMPOSE) build
 	$(COMPOSE) up
 
-# Run the application
-.PHONY: app-run
-app-run: ## Run the application using uv
-	@uv run app/etl.py
+# Run tests
+.PHONY: test
+test: build ## Build the image and run tests
+	@echo "Running tests..."
+	$(COMPOSE) run --rm $(SERVICE) pytest
 
-# Run interactive shell
+# Open an interactive shell in the container
 .PHONY: shell
-shell: ## Open an interactive shell inside the container
+shell: ## Open an interactive shell in the container
 	@echo "Opening interactive shell..."
 	$(COMPOSE) exec $(SERVICE) /bin/sh
+
+# Clean up the environment
+.PHONY: clean
+clean: down ## Clean up environment and temporary files
+	@echo "Cleaning up environment..."
+	@find . -name "__pycache__" -type d -exec rm -rf {} +
+	@echo "Environment cleaned up."
+
+# Remove unused Docker resources
+.PHONY: docker-clean
+docker-clean: ## Remove unused Docker containers, images, and volumes
+	@echo "Cleaning up Docker resources..."
+	docker container prune -f
+	docker image prune -f
+	docker volume prune -f
+	docker network prune -f
+	@echo "Docker cleanup complete."
+
+# Initialize the UV project locally
+.PHONY: install
+install: ## Install requirements for the local UV project
+	@echo "Installing dependencies for the UV project..."
+	uv pip install -r requirements.txt
+	uv sync
+
+# Run the application locally
+.PHONY: app-run
+app-run: ## Run the application using the UV project
+	@echo "Running the application locally with UV..."
+	uv run app/etl.py
+
+# Run tests locally with UV
+.PHONY: test-local
+test-local: ## Run tests locally using the UV project
+	@echo "Running tests locally with UV..."
+	uv pytest
