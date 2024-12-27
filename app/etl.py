@@ -1,6 +1,8 @@
 import traceback
-from datasets import load_dataset, Dataset
-from app.db import DatabaseHandler, DB_PATH, CACHE_PATH
+
+from datasets import Dataset, load_dataset
+
+from app.db import CACHE_PATH, DB_PATH, DatabaseHandler
 from app.insights import data_insights
 from app.logging_config import configure_logging
 

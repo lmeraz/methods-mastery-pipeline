@@ -1,14 +1,16 @@
-import pytest
 from collections import Counter
 from datetime import datetime
+
+import pytest
 from datasets import Dataset
+
 from app.insights import (
-    unique_posts,
     average_post_length,
-    top_authors,
-    hourly_distribution,
-    top_hashtags,
     data_insights,
+    hourly_distribution,
+    top_authors,
+    top_hashtags,
+    unique_posts,
 )
 
 
@@ -35,12 +37,7 @@ def mock_dataset():
             "uri3",
             "uri4",
         ],
-        "has_images": [
-            True,
-            True,
-            False,
-            False
-        ],
+        "has_images": [True, True, False, False],
         "reply_to": [
             "uri5",
             "uri5",
@@ -63,7 +60,7 @@ def test_average_post_length(mock_dataset):
     expected_avg = sum(len(post) for post in mock_dataset["text"]) / len(
         mock_dataset["text"]
     )
-    assert result == {"average_post_length": 4*[expected_avg]}
+    assert result == {"average_post_length": 4 * [expected_avg]}
 
 
 def test_top_authors(mock_dataset):
@@ -85,7 +82,12 @@ def test_top_hashtags(mock_dataset):
     """Test top_hashtags function."""
     result = top_hashtags(mock_dataset)
     hashtags = Counter(
-        [tag for post in mock_dataset["text"] for tag in post.split() if tag.startswith("#")]
+        [
+            tag
+            for post in mock_dataset["text"]
+            for tag in post.split()
+            if tag.startswith("#")
+        ]
     ).most_common(10)
     assert result == {"top_hashtags": hashtags}
 

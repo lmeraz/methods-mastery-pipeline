@@ -1,5 +1,7 @@
 import pytest
+
 from app.db import DatabaseHandler
+
 
 @pytest.fixture
 def db_handler():
@@ -8,6 +10,7 @@ def db_handler():
     """
     handler = DatabaseHandler(":memory:")
     return handler
+
 
 def test_create_tables(db_handler):
     """
@@ -21,11 +24,15 @@ def test_create_tables(db_handler):
     assert result is not None, "Table 'insights' should exist."
     assert result[0] == "insights", "Table name should be 'insights'."
 
+
 def test_upsert_insights(db_handler):
     """
     Test upsert insights data.
     """
-    insights = {"metric1": "value1", "metric2": "value2",}
+    insights = {
+        "metric1": "value1",
+        "metric2": "value2",
+    }
     db_handler.upsert_insights(insights)
 
     cursor = db_handler.conn.cursor()
@@ -45,13 +52,16 @@ def test_upsert_insights(db_handler):
 
     assert updated_value
 
+
 def test_get_latest_insights_version(db_handler):
     """
     Test retrieving the latest insights version.
     """
     # Since the table does not have a 'version' column, this part is revised
     # Insert mock data for testing
-    db_handler.conn.execute("INSERT INTO insights (metric, value) VALUES ('version', 'value1');")
+    db_handler.conn.execute(
+        "INSERT INTO insights (metric, value) VALUES ('version', 'value1');"
+    )
 
     # Retrieve the latest version (mocked as the last inserted metric)
     cursor = db_handler.conn.cursor()

@@ -1,8 +1,10 @@
-import sqlite3
 import os
+import sqlite3
 from pathlib import Path
-from typing import Union, Dict
+from typing import Dict, Union
+
 from app.logging_config import configure_logging
+
 # Configure logging
 logger = configure_logging()
 
@@ -11,7 +13,9 @@ logger = configure_logging()
 DB_NAME = "pipeline.db"
 
 # Use environment variable DATA_PATH if set, otherwise default to local "data" folder
-DATA_FOLDER = Path(os.getenv("DATA_PATH", Path(__file__).resolve().parent.parent / "data"))
+DATA_FOLDER = Path(
+    os.getenv("DATA_PATH", Path(__file__).resolve().parent.parent / "data")
+)
 DB_PATH = DATA_FOLDER / DB_NAME
 CACHE_PATH = DATA_FOLDER
 
