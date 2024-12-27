@@ -73,6 +73,7 @@ install: ## Install requirements for the local UV project
 	@echo "Installing dependencies for the UV project..."
 	uv pip install -r requirements.txt
 	uv sync
+	uv run pre-commit install
 
 # Run the application locally
 .PHONY: app-run
