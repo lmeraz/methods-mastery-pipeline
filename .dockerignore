@@ -1,0 +1,6 @@
+.venv
+data/
+.gitignore
+Dockerfile
+makefile
+README.md

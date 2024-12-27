@@ -1,0 +1,8 @@
+version: "3.8"
+services:
+  etl:
+    build: .
+    container_name: social-media-insights
+    volumes:
+      - ./data:./data
+    command: ["uv", "etl"]
