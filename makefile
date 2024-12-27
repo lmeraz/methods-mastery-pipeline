@@ -1,6 +1,7 @@
 # Variables
 COMPOSE := docker-compose
 SERVICE := etl
+UV := uv
 
 # Default target
 .DEFAULT_GOAL := help
@@ -77,10 +78,10 @@ install: ## Install requirements for the local UV project
 .PHONY: app-run
 app-run: ## Run the application using the UV project
 	@echo "Running the application locally with UV..."
-	uv run app/etl.py
+	PYTHONPATH=$(shell pwd) $(UV) run app/etl.py
 
 # Run tests locally with UV
 .PHONY: test-local
 test-local: ## Run tests locally using the UV project
 	@echo "Running tests locally with UV..."
-	uv pytest
+	PYTHONPATH=$(shell pwd) $(UV) pytest

@@ -1,10 +1,8 @@
-import logging
+import sqlite3
+import os
 from pathlib import Path
 from typing import Union, Dict
-import sqlite3
-from logging_config import configure_logging
-import os
-
+from app.logging_config import configure_logging
 # Configure logging
 logger = configure_logging()
 

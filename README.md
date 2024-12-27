@@ -24,7 +24,11 @@ This project extracts, transforms, and loads social media post data into a SQLit
    ```bash
    make install
    ```
-3. Build Docker Image
+3. Source env:
+   ```bash
+   source .venv/bin/activate
+   ```
+4. Build Docker Image
    ```
    make build
    ```
