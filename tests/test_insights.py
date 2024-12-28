@@ -51,7 +51,8 @@ def mock_dataset():
 def test_unique_posts(mock_dataset):
     """Test unique_posts function."""
     result = unique_posts(mock_dataset)
-    assert result == {"unique_posts": [3, 3, 3, 3]}  # "Hello world!" appears twice
+    expected_result = 3
+    assert result == expected_result  # "Hello world!" appears twice
 
 
 def test_average_post_length(mock_dataset):
@@ -60,26 +61,28 @@ def test_average_post_length(mock_dataset):
     expected_avg = sum(len(post) for post in mock_dataset["text"]) / len(
         mock_dataset["text"]
     )
-    assert result == {"average_post_length": 4 * [expected_avg]}
+    assert result == expected_avg
 
 
 def test_top_authors(mock_dataset):
     """Test top_authors function."""
     result = top_authors(mock_dataset)
     expected_authors = Counter(mock_dataset["author"]).most_common(10)
-    assert result == {"top_authors": expected_authors}
+    assert result == expected_authors
 
 
 def test_hourly_distribution(mock_dataset):
     """Test hourly_distribution function."""
+    # Apply the function using Dataset.map
     result = hourly_distribution(mock_dataset)
     hours = [datetime.fromisoformat(time).hour for time in mock_dataset["created_at"]]
-    expected_distribution = Counter(hours)
-    assert result == {"hourly_distribution": dict(expected_distribution)}
+    expected_counts = dict(Counter(hours))
+    assert result == expected_counts
 
 
 def test_top_hashtags(mock_dataset):
     """Test top_hashtags function."""
+    # Run the top_hashtags function
     result = top_hashtags(mock_dataset)
     hashtags = Counter(
         [
@@ -89,7 +92,7 @@ def test_top_hashtags(mock_dataset):
             if tag.startswith("#")
         ]
     ).most_common(10)
-    assert result == {"top_hashtags": hashtags}
+    assert result == hashtags
 
 
 def test_data_insights(mock_dataset):

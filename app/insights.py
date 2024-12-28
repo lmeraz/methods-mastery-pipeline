@@ -5,38 +5,73 @@ from typing import Dict
 
 from datasets import Dataset
 
+BATCH_SIZE = 1000
+NUM_PROC = 4
+
 
 # Unique posts
-def unique_posts(batch: Dataset) -> Dict:
+def unique_posts(ds: Dataset) -> Dict:
     """Calculates unique posts."""
-    unique_content = len(set(batch["text"]))
-    return {"unique_posts": [unique_content] * len(batch["text"])}
+    partial_results = ds.map(
+        lambda x: {"unique_posts": [set(x["text"])]},
+        batched=True,
+        batch_size=BATCH_SIZE,
+        num_proc=NUM_PROC,
+    )
+    result = set()
+    for s in partial_results["unique_posts"]:
+        result.update(s)
+    count = len(result)
+    return count
 
 
 # Average post length
-def average_post_length(batch: Dataset) -> Dict:
+def average_post_length(ds: Dataset) -> Dict:
     """Calculates average post length."""
-    lengths = [len(post) for post in batch["text"]]
-    avg_length = sum(lengths) / len(lengths)
-    return {"average_post_length": [avg_length] * len(batch["text"])}
+    partial_results = ds.map(
+        lambda batch: {
+            "partial_sum": [
+                sum(len(post) for post in batch["text"])
+            ],  # Sum of lengths in the batch
+            "partial_count": [len(batch["text"])],  # Number of posts in the batch
+        },
+        batched=True,
+        batch_size=BATCH_SIZE,
+        num_proc=NUM_PROC,
+    )
+    total_sum = sum(partial_results["partial_sum"])
+    total_count = sum(partial_results["partial_count"])
+    average_post_length = total_sum / total_count if total_count > 0 else 0
+    return average_post_length
 
 
 # Top Authors
-def top_authors(batch: Dataset) -> Dict:
+def top_authors(ds: Dict) -> Dict:
     """Calculates top authors."""
-    authors = Counter(batch["author"])
-    top_authors_list = authors.most_common(10)
-    return {"top_authors": [json.dumps(top_authors_list)] * len(batch["text"])}
+    unique_authors = set(ds["author"])
+    partial_results = ds.map(
+        lambda batch: {
+            "partial_author_counts": [
+                {author: batch["author"].count(author) for author in unique_authors}
+            ]
+        },
+        batched=True,
+        batch_size=BATCH_SIZE,
+        num_proc=NUM_PROC,
+    )
+    result = Counter()
+    for batch_count in partial_results["partial_author_counts"]:
+        result.update(dict(batch_count))
+    top_authors = result.most_common(10)
+    return top_authors
 
 
 # Posting times
-def hourly_distribution(batch: Dataset) -> Dict:
+def hourly_distribution(ds: Dict) -> Dict:
     """Calculates hourly distribution."""
-    times = [datetime.fromisoformat(time).hour for time in batch["created_at"]]
-    hourly_counts = Counter(times)
-    return {
-        "hourly_distribution": [json.dumps(dict(hourly_counts))] * len(batch["text"])
-    }
+    times = [datetime.fromisoformat(time).hour for time in ds["created_at"]]
+    hourly_counts = dict(Counter(times))
+    return hourly_counts
 
 
 # Hashtags
@@ -46,32 +81,25 @@ def top_hashtags(batch: Dataset) -> Dict:
         [tag for post in batch["text"] for tag in post.split() if tag.startswith("#")]
     )
     top_hashtags_list = hashtags.most_common(10)
-    return {"top_hashtags": [json.dumps(top_hashtags_list)] * len(batch["text"])}
-
-
-insight_functions = [
-    unique_posts,
-    average_post_length,
-    top_authors,
-    hourly_distribution,
-    top_hashtags,
-]
+    return top_hashtags_list
 
 
 def data_insights(ds: Dataset) -> Dict:
-    """Parallel calculations."""
     insights = {}
-    for func in insight_functions:
-        result = ds.map(
-            func, batched=True, batch_size=1000, num_proc=4
-        )  # Adjust num_proc for parallelism
-        # Extract relevant columns added by the function
-        for column in result.column_names:
-            if (
-                column not in ds.column_names
-            ):  # Identify new columns added by the function
-                insights[column] = result[column][
-                    0
-                ]  # Extract the first value or summary
     insights["version"] = ds.info.version
+    insights["top_hashtags"] = top_hashtags(ds)
+    insights["hourly_distribution"] = hourly_distribution(ds)
+    insights["top_authors"] = top_authors(ds)
+    insights["average_post_length"] = average_post_length(ds)
+    insights["unique_posts"] = unique_posts(ds)
     return insights
+
+
+## TODO:
+# unique_authors_ct
+# total_posts_num
+# avg_posting_time
+# posts_with_images_ct
+# unique_hashtags_ct
+# peak_posting
+# top_posting_date
